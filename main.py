@@ -2,17 +2,10 @@ import math
 import pygame
 import pid
 from utils import scale_image, blit_rotate_center, blit_text_center
-from scipy import stats
-import pandas as pd
-import matplotlib.pyplot as plt
-import time 
-import numpy as np
-from mpl_toolkits.mplot3d import Axes3D
 
 
 pygame.init()
 pygame.font.init()
-
 
 clock = pygame.time.Clock()
 debug = False
@@ -172,6 +165,7 @@ scroll = 0
 tiles = math.ceil(FrameWidth / bg.get_width()) + 1
 
 
+# TWIDDLE OPTIMIZATION
 def evaluate_controller(params, max_steps=1000):
     # reset simulation
     player_car = PlayerCar(1, 4)
@@ -203,115 +197,19 @@ def evaluate_controller(params, max_steps=1000):
 
     return total_error
 
-0.02, 0.0001, 0.05
 
-
-# Define ranges for parameters
-P_range = np.linspace(0, 0.01, 50)
-I_range = np.linspace(0, 0.0001, 50)
-D_range = np.linspace(0, 0.01, 50)
-
-# Fixed parameter values
-fixed_I = 0.0001
-fixed_D = 0.05
-fixed_P = 0.02
-
-# Create grids for two parameters while keeping the third fixed
-P, I = np.meshgrid(P_range, I_range)
-D, I = np.meshgrid(D_range, I_range)
-P, D = np.meshgrid(P_range, D_range)
-
-# Compute error for each grid combination (replace with evaluate_controller)
-error_PI = np.array([[evaluate_controller([p, i, fixed_D]) for p, i in zip(row_p, row_i)] for row_p, row_i in zip(P, I)])
-error_PD = np.array([[evaluate_controller([p, fixed_I, d]) for p, d in zip(row_p, row_d)] for row_p, row_d in zip(P, D)])
-error_ID = np.array([[evaluate_controller([fixed_P, i, d]) for i, d in zip(row_i, row_d)] for row_i, row_d in zip(I, D)])
-
-# Plot surfaces
-fig = plt.figure(figsize=(15, 5))
-
-# P-I
-ax1 = fig.add_subplot(131, projection='3d')
-ax1.plot_surface(P, I, error_PI, cmap='viridis')
-ax1.set_title('Error Surface for P and I')
-ax1.set_xlabel('P')
-ax1.set_ylabel('I')
-ax1.set_zlabel('Error')
-
-# P-D
-ax2 = fig.add_subplot(132, projection='3d')
-ax2.plot_surface(P, D, error_PD, cmap='viridis')
-ax2.set_title('Error Surface for P and D')
-ax2.set_xlabel('P')
-ax2.set_ylabel('D')
-ax2.set_zlabel('Error')
-
-# I-D
-ax3 = fig.add_subplot(133, projection='3d')
-ax3.plot_surface(I, D, error_ID, cmap='viridis')
-ax3.set_title('Error Surface for I and D')
-ax3.set_xlabel('I')
-ax3.set_ylabel('D')
-ax3.set_zlabel('Error')
-
-plt.show()
-
-# # twiddle 
-# print("Optimizing started...")
-# twiddle = pid.Twiddle()
-# best_params = None
-# best_error = float("inf")
-# num_iterations = 100
-
-# for i in range(num_iterations):
-#     params, error = twiddle.run_iteration(evaluate_controller)
-#     if error < best_error:
-#         best_params = params.copy()
-#         best_error = error
-#     print(f"Iteration {i}: Parameters: {params}, Error: {error}")
-
-# print(f"\nBest parameters found: {best_params}")
-
-# # run the car with best params
-# print("Running simulation with best parameters...")
-# player_car = PlayerCar(1, 4)
-# controller = pid.PIDcontroller(best_params)
-# scroll = 0
-
-# # visualization loop
-# running = True
-# while running:
-#     for event in pygame.event.get():
-#         if event.type == pygame.QUIT:
-#             running = False
-
-#     clock.tick(60)
-#     scroll = draw(screen, player_car, scroll)
-#     move_player(player_car)
-
-#     if (
-#         player_car.x > 1200
-#         or player_car.x < 0
-#         or player_car.y < 0
-#         or player_car.y > 400
-#     ):
-#         player_car = PlayerCar(1, 4)
-#         controller.reset()
-
-# pygame.quit()
-
-# evolutionary algorithm
-print("ptimizing started...")
-evolutionary_algo = pid.EvolutionaryAlgorithm(population_size=100, mutation_rate=0.1, crossover_rate=0.5)
+print("Optimizing started...")
+twiddle = pid.Twiddle()
 best_params = None
 best_error = float("inf")
 num_iterations = 100
 
 for i in range(num_iterations):
-    params, error = evolutionary_algo.run_iteration(evaluate_controller)
+    params, error = twiddle.run_iteration(evaluate_controller)
     if error < best_error:
         best_params = params.copy()
         best_error = error
-    print(f"Generation {i}: Parameters: {params}, Error: {error}")
+    print(f"Iteration {i}: Parameters: {params}, Error: {error}")
 
 print(f"\nBest parameters found: {best_params}")
 
@@ -322,7 +220,7 @@ controller = pid.PIDcontroller(best_params)
 scroll = 0
 
 # visualization loop
-running = True
+running = False
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -338,7 +236,5 @@ while running:
         or player_car.y < 0
         or player_car.y > 400
     ):
-        player_car = PlayerCar(1, 4)
-        controller.reset()
-
+        running = False
 pygame.quit()

@@ -1,5 +1,3 @@
-import random
-
 class PIDcontroller:
     def __init__(self, params=[0.02, 0.0001, 0.05]):
         self.p_p = params[0]  # proportional gain
@@ -57,51 +55,3 @@ class Twiddle:
                     self.dp[i] *= 0.9
 
         return self.params, self.best_error
-
-class EvolutionaryAlgorithm:
-    def __init__(self, population_size = 100, mutation_rate=0.1, crossover_rate=0.5):
-        self.population_size = population_size
-        self.mutation_rate = mutation_rate
-        self.crossover_rate = crossover_rate
-        self.population = [
-            [random.uniform(0.01, 0.1), random.uniform(0.00001, 0.001), random.uniform(0.01, 0.1)]
-            for _ in range(population_size)
-        ]
-        self.best_individual = None
-        self.best_error = float("inf")
-
-    def mutate(self, params):
-        return [
-            param + random.uniform(-param * self.mutation_rate, param * self.mutation_rate)
-            for param in params
-        ]
-        
-    def crossover(self, parent1, parent2):
-        child = [
-            parent1[i] if random.random() < self.crossover_rate else parent2[i]
-            for i in range(len(parent1))
-        ]
-        return child
-        
-    def select_parents(self, population, fitnesses):
-        total_fitness = sum(fitnesses)
-        probs = [1.0 - (f / total_fitness) for f in fitnesses]
-        return random.choices(population, probs, k=2)
-        
-    def run_iteration(self, evaluate_func):
-        fitnesses = [evaluate_func(ind) for ind in self.population]
-
-        for i, error in enumerate(fitnesses):
-            if error < self.best_error:
-                self.best_error = error
-                self.best_individual = self.population[i]
-
-        new_population = []
-        for _ in range(self.population_size):
-            parent1, parent2 = self.select_parents(self.population, fitnesses)
-            child = self.crossover(parent1, parent2)
-            child = self.mutate(child)
-            new_population.append(child)
-
-        self.population = new_population
-        return self.best_individual, self.best_error
