@@ -224,7 +224,7 @@ running = False
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
+            running = True
 
     clock.tick(60)
     scroll = draw(screen, player_car, scroll)
