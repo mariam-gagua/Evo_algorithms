@@ -1,9 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-import seaborn as sns
 from main import evaluate_controller
-import time
 
 
 class Individual:
@@ -27,7 +23,7 @@ class EvolutionaryOptimizer:
         self.selection_size = selection_size
         self.use_elitism = use_elitism
 
-        # init param ranges (based on Twiddle)
+        # Parameter ranges based on Twiddle results
         self.p_range = (0, 0.2)
         self.i_range = (0, 0.005)
         self.d_range = (0, 7.0)
@@ -47,7 +43,6 @@ class EvolutionaryOptimizer:
 
     def mutate(self, individual):
         new_genes = individual.genes + np.random.normal(0, self.mutation_std, size=3)
-        # clip to valid ranges
         new_genes = np.clip(
             new_genes,
             [self.p_range[0], self.i_range[0], self.d_range[0]],
@@ -61,12 +56,10 @@ class EvolutionaryOptimizer:
 
     def roulette_wheel_selection(self, population):
         fitnesses = np.array([ind.evaluate() for ind in population])
-        min_fitness = min(fitnesses)
-        fitnesses = fitnesses - min_fitness + 1e-6
-        probabilities = fitnesses / sum(fitnesses)
-
+        fitnesses = fitnesses - min(fitnesses) + 1e-6
+        probs = fitnesses / sum(fitnesses)
         selected_indices = np.random.choice(
-            len(population), size=self.selection_size, p=probabilities, replace=True
+            len(population), size=self.selection_size, p=probs
         )
         return [population[i] for i in selected_indices]
 
@@ -86,7 +79,6 @@ class EvolutionaryOptimizer:
         best_individual = None
         generations_without_improvement = 0
 
-        # selection method mapping
         selection_methods = {
             "truncation": self.truncation_selection,
             "roulette": self.roulette_wheel_selection,
@@ -94,14 +86,12 @@ class EvolutionaryOptimizer:
         }
         select = selection_methods[selection_method]
 
-        print(f"Starting optimization with {selection_method} selection...")
-
         for generation in range(max_generations):
-            # evaluate population
+            # Evaluate population
             for ind in population:
                 ind.evaluate()
 
-            # find best individual
+            # Track best individual
             current_best = max(population, key=lambda x: x.evaluate())
             if (
                 best_individual is None
@@ -112,27 +102,14 @@ class EvolutionaryOptimizer:
             else:
                 generations_without_improvement += 1
 
-            # record best fitness
-            best_fitness_history.append(
-                -best_individual.evaluate()
-            )  # convert back to error
+            best_fitness_history.append(-best_individual.evaluate())
 
-            if generation % 10 == 0:
-                print(
-                    f"Generation {generation}: Best error = {-best_individual.evaluate():.2f}"
-                )
-
-            # check convergence
-            if (
-                generations_without_improvement >= 20
-            ):  # no improvement for 20 generations
-                print(f"Converged after {generation} generations")
+            # Check convergence
+            if generations_without_improvement >= 20:
                 break
 
-            # selection
+            # Selection and reproduction
             selected = select(population)
-
-            # create new population
             new_population = []
             if self.use_elitism:
                 new_population.append(best_individual)
@@ -144,37 +121,4 @@ class EvolutionaryOptimizer:
 
             population = new_population
 
-        return best_individual, best_fitness_history
-
-
-def run_comparison(selection_sizes=[2, 5, 10, 20], n_trials=5):
-    results = {"with_elitism": [], "without_elitism": []}
-
-    for selection_size in selection_sizes:
-        for use_elitism in [True, False]:
-            convergence_gens = []
-            for trial in range(n_trials):
-                print(
-                    f"\nTrial {trial + 1} with selection_size={selection_size}, elitism={use_elitism}"
-                )
-                optimizer = EvolutionaryOptimizer(
-                    selection_size=selection_size, use_elitism=use_elitism
-                )
-                _, history = optimizer.optimize()
-                convergence_gens.append(len(history))
-
-            key = "with_elitism" if use_elitism else "without_elitism"
-            results[key].append(np.mean(convergence_gens))
-
-    return results
-
-
-if __name__ == "__main__":
-    optimizer = EvolutionaryOptimizer(selection_size=10, use_elitism=True)
-    best_individual, history = optimizer.optimize()
-
-    print("\nBest parameters found:")
-    print(f"P: {best_individual.genes[0]:.6f}")
-    print(f"I: {best_individual.genes[1]:.6f}")
-    print(f"D: {best_individual.genes[2]:.6f}")
-    print(f"Final error: {-best_individual.evaluate():.6f}")
+        return best_individual, len(best_fitness_history)
