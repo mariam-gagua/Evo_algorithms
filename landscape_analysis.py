@@ -160,5 +160,30 @@ def analyze_error_landscape():
     print(f"I-D surface convex: {check_convexity(error_ID)}")
 
 
+def plot_convergence_comparison():
+    """Compare convergence speed of different selection methods"""
+    methods = ["truncation", "roulette", "tournament"]
+    generations_mean = []
+    generations_std = []
+
+    n_trials = 10
+    for method in methods:
+        gens = []
+        for i in range(n_trials):
+            _, generations = optimize_evo(selection_method=method)
+            gens.append(generations)
+        generations_mean.append(np.mean(gens))
+        generations_std.append(np.std(gens))
+
+    plt.figure(figsize=(10, 6))
+    plt.bar(methods, generations_mean, yerr=generations_std, capsize=5)
+    plt.xlabel("Selection Method")
+    plt.ylabel("Generations to Converge")
+    plt.title("Selection Method Convergence Speed Comparison")
+    plt.grid(True)
+    plt.savefig("convergence_comparison.png")
+    plt.close()
+
+
 if __name__ == "__main__":
     analyze_error_landscape()
