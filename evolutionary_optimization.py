@@ -23,7 +23,7 @@ class EvolutionaryOptimizer:
         self.selection_size = selection_size
         self.use_elitism = use_elitism
 
-        # Parameter ranges based on Twiddle results
+        # param ranges based on Twiddle results
         self.p_range = (0, 0.2)
         self.i_range = (0, 0.005)
         self.d_range = (0, 7.0)

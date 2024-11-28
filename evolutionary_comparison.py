@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 from evolutionary_optimization import EvolutionaryOptimizer
 from pid import Twiddle
 import time
-from scipy import stats
 
 
 def run_experiment(selection_method, selection_sizes=[2, 5, 10, 20], n_trials=5):
@@ -47,7 +46,7 @@ def compare_methods():
         end_time = time.time()
 
         method_times[method] = end_time - start_time
-        method_time_stds[method] = 0  # We're not doing multiple timing trials
+        method_time_stds[method] = 0
         all_results[method] = results
 
     # Add Twiddle timing
