@@ -58,6 +58,13 @@ def compare_methods():
     method_times["twiddle"] = time.time() - start_time
     method_time_stds["twiddle"] = 0
 
+    # Add print statements for timing results
+    print("\nWall Time Results:")
+    print("=" * 40)
+    for method, time_taken in method_times.items():
+        print(f"{method.capitalize():12} : {time_taken:.3f} seconds")
+    print("=" * 40)
+
     # Plot final results
     plot_results(all_results, method_times, method_time_stds, "final_results.png")
 
@@ -92,18 +99,30 @@ def plot_results(all_results, method_times, method_time_stds, filename="results.
     plt.savefig(filename)
     plt.close()
 
-    # Plot wall time comparison
+    # Modified wall time comparison plot
     plt.figure(figsize=(10, 5))
     methods = list(method_times.keys())
     times = [method_times[m] for m in methods]
     time_stds = [method_time_stds[m] for m in methods]
 
-    plt.bar(methods, times, yerr=time_stds, capsize=5)
+    bars = plt.bar(methods, times, yerr=time_stds, capsize=5)
     plt.xlabel("Selection Method")
     plt.ylabel("Wall Time (seconds)")
     plt.title("Optimization Method Wall Time Comparison")
     plt.xticks(rotation=45)
     plt.grid(True)
+
+    # Add value labels on top of each bar
+    for bar in bars:
+        height = bar.get_height()
+        plt.text(
+            bar.get_x() + bar.get_width() / 2.0,
+            height,
+            f"{height:.2f}s",
+            ha="center",
+            va="bottom",
+        )
+
     plt.tight_layout()
     plt.savefig("wall_time_comparison.png")
     plt.close()
