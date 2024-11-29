@@ -99,7 +99,7 @@ def plot_results(all_results, method_times, method_time_stds, filename="results.
     plt.savefig(filename)
     plt.close()
 
-    # Modified wall time comparison plot
+    # wall time comparison plot
     plt.figure(figsize=(10, 5))
     methods = list(method_times.keys())
     times = [method_times[m] for m in methods]
@@ -112,7 +112,7 @@ def plot_results(all_results, method_times, method_time_stds, filename="results.
     plt.xticks(rotation=45)
     plt.grid(True)
 
-    # Add value labels on top of each bar
+    # value labels on top of each bar
     for bar in bars:
         height = bar.get_height()
         plt.text(
